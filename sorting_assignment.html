@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+  <title>Deck -o- Cards</title>
+</head>
+<body>
+  <button style="display:none;" id="sort-button">
+    Click to sort
+  </button>
+  <button style="display:none;" id="shuffle-button">
+    Click to shuffle
+  </button>
+  <ul id="deck">
+  </ul>
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script type="text/javascript">
+    function Card(r, s) {
+      this.rank = r;
+      this.suit = s;
+      this.toHTML = function() {
+        return "<li class='card'>" + this.rank + "-" + this.suit + "</li>";
+      };
+
+      var rankToNumber = function(rank) {
+        if (rank == 'A') {
+          return 1;
+        } else if (rank == 'J') {
+          return 11;
+        } else if (rank == 'Q') {
+          return 12;
+        } else if (rank == 'K') {
+          return 13;
+        } else {
+          return parseInt(rank, 10);
+        }
+      }
+
+      this.isLessThan = function(other) {
+        if (this.suit == other.suit) {
+          return rankToNumber(this.rank) < rankToNumber(other.rank);
+        } else {
+          return this.suit == 'H' ||
+            this.suit == 'C' && other.suit == 'D' ||
+            this.suit == 'C' && other.suit == 'S' ||
+            this.suit == 'D' && other.suit == 'S';
+        }
+      }
+    }
+
+    function Deck() {
+      var thisDeck = this;
+      this.shuffled = false;
+      this.suits = ['H', 'C', 'D', 'S'];
+      this.ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+      $.each(thisDeck.suits, function() {
+        var suit = this;
+        $.each(thisDeck.ranks, function() {
+          var rank = this;
+          var card = new Card(rank, suit);
+          $('#deck').append(card.toHTML());
+        });
+      });
+
+    }
+
+    var swap = function(a, b) {
+      $('body').queue(function() {
+        var temp = $('li:eq(' + a + ')').text();
+        $('li:eq(' + a + ')')
+          .text($('li:eq(' + b + ')').text());
+        $('li:eq(' + b + ')').text(temp);
+        $(this).dequeue();
+      });
+    };
+
+    var shuffle = function(m) {
+      var rand, $rand;
+
+      rand = Math.floor(Math.random() * m--);
+
+      swap(m, rand);
+      if (m) {
+        setTimeout(shuffle, 50, m);
+        // shuffle(m);
+      } else {
+        // done shuffling, so show sort button
+        $('#sort-button').show();
+      }
+    };
+
+    var getCardAtIndex = function(index) {
+      var text = $('li:eq(' + index + ')').text().split('-');
+      return new Card(text[0], text[1]);
+    }
+
+    var sortRecursive = function(thisIteration, indexToCheck, length) {
+      var card = getCardAtIndex(indexToCheck);
+      if (indexToCheck > 0 && card.isLessThan(getCardAtIndex(indexToCheck - 1))) {
+        // to find where to put card, swap it to the left until card comes
+        // after a smaller card
+        swap(indexToCheck - 1, indexToCheck);
+        setTimeout(sortRecursive, 50, thisIteration, indexToCheck - 1, length);
+      } else if (thisIteration + 1 < length) {
+        // Sort the next card to the right if we're not at the end yet
+        setTimeout(sortRecursive, 50, thisIteration + 1, thisIteration, length);
+      } else {
+        // done sorting, so show shuffle button
+        $('#shuffle-button').show();
+      }
+    }
+
+    var sort = function(length) {
+      sortRecursive(1, 1, length);
+    };
+
+    var deck = new Deck();
+    shuffle($('.card').length);
+
+    $('#sort-button').click(function() {
+      $(this).hide();
+      sort($('.card').length);
+    });
+    $('#shuffle-button').click(function() {
+      $(this).hide();
+      shuffle($('.card').length);
+    })
+
+  </script>
+</body>
+</html>
+
+
+
+
+
+
